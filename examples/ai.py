@@ -101,12 +101,10 @@ def ChatGPT_multi_turn(current_message: str)  -> funix.hint.HTML:
 def set(api_key: str="", sys_env_var:bool=True) -> str:
     if sys_env_var:
         return "OpenAI API key is set in your environment variable. Nothing changes."
-    else:
-        if api_key == "":
-            return "You entered an empty string. Try again."
-        else:
-            openai.api_key = api_key
-            return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
+    if not api_key:
+        return "You entered an empty string. Try again."
+    openai.api_key = api_key
+    return "OpenAI API key has been set via the web form! If it was set via an environment variable, it's been overwritten."
 
 
 @funix.funix()

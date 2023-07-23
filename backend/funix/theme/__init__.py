@@ -40,10 +40,7 @@ def dict_replace(original_dict: dict, original: str, new: any) -> dict:
         }
 
     # str
-    if original_dict == original:
-        return new
-    else:
-        return original_dict
+    return new if original_dict == original else original_dict
 
 
 def get_full_style_from_sugar(key: str, value: any) -> dict:
@@ -82,17 +79,20 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict) -> dict:
     }
     temp_colors = {}
     if colors:
-        for color in colors.keys():
-            if color in ["mode", "divider", "contrastThreshold", "tonalOffset"]:
+        for color in colors:
+            if color in [
+                "mode",
+                "divider",
+                "contrastThreshold",
+                "tonalOffset",
+            ] or not isinstance(colors[color], str):
                 mui_theme["palette"][color] = colors[color]
-            elif isinstance(colors[color], str):
-                mui_theme["palette"][color] = {"main": colors[color]}
             else:
-                mui_theme["palette"][color] = colors[color]
+                mui_theme["palette"][color] = {"main": colors[color]}
     if typography:
         mui_theme["typography"] = typography
-    for widget_name in theme.keys():
-        widget_mui_name = "Mui" + widget_name[0].upper() + widget_name[1::]
+    for widget_name in theme:
+        widget_mui_name = f"Mui{widget_name[0].upper()}" + widget_name[1::]
         mui_theme["components"][widget_mui_name] = {
             "defaultProps": {},
             "styleOverrides": {},
@@ -105,7 +105,7 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict) -> dict:
             elif prop_name == "color":
                 color_name = f"temp_{uuid4().hex}"
                 if not theme[widget_name][prop_name] in mui_theme["palette"]:
-                    if theme[widget_name][prop_name] in temp_colors.keys():
+                    if theme[widget_name][prop_name] in temp_colors:
                         mui_theme["components"][widget_mui_name]["defaultProps"][
                             prop_name
                         ] = temp_colors[theme[widget_name][prop_name]]
@@ -126,7 +126,7 @@ def get_mui_theme(theme: dict, colors: dict, typography: dict) -> dict:
                             "&&:hover::before": {"borderColor": true_color},
                         }
                     }
-                if widget_name == "textField":
+                elif widget_name == "textField":
                     style_override = {
                         "root": {
                             "& fieldset": {"borderColor": true_color},
@@ -172,8 +172,6 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
     type_widget_dict = {}
     widget_style = {}
     custom_palette = {}
-    custom_typography = {}
-
     if "widgets" in theme:
         for type_name in theme["widgets"]:
             list_type_name = (
@@ -213,8 +211,7 @@ def parse_theme(theme: dict) -> tuple[list[str], dict, dict, dict, dict]:
                 widget_style[widget_name].update(theme["props"][widget_name])
             else:
                 widget_style[widget_name] = theme["props"][widget_name]
-    if "typography" in theme:
-        custom_typography = theme["typography"]
+    custom_typography = theme.get("typography", {})
     mui_theme = get_mui_theme(widget_style, custom_palette, custom_typography)
     return type_names, type_widget_dict, widget_style, custom_palette, mui_theme
 
@@ -252,11 +249,10 @@ def get_dict_theme(
                 "Module must be specified when dict_name is not specified, "
                 "if you specify path or url, must specify dict_name!"
             )
-    else:
-        if path is None and url is None:
-            raise ValueError("Must specify path or url when dict_name is specified!")
-        elif path is not None and url is not None:
-            raise ValueError("Can't specify both path and url!")
+    elif path is None and url is None:
+        raise ValueError("Must specify path or url when dict_name is specified!")
+    elif path is not None and url is not None:
+        raise ValueError("Can't specify both path and url!")
 
     # import theme
     if path:
@@ -265,7 +261,7 @@ def get_dict_theme(
         name = uuid4().hex
         tempdir = create_safe_tempdir()
 
-        py_theme_path = join(tempdir, name + ".py")
+        py_theme_path = join(tempdir, f"{name}.py")
 
         with open(py_theme_path, "wb") as f:
             f.write(get(url).content)
@@ -273,5 +269,4 @@ def get_dict_theme(
         module = import_module_from_file(py_theme_path, False)
     elif module is not None:
         return module
-    theme = getattr(module, dict_name)
-    return theme
+    return getattr(module, dict_name)

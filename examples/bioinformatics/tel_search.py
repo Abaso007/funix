@@ -33,12 +33,7 @@ def gen_telomeres_forward(repeat, length:int=21):
     cycles = length // len(repeat) + 2
     base_string = repeat * cycles 
 
-    telomeres = [base_string[i: i + length ] for i in range(len(repeat))]
-    # telomeres = [i for i in range(len(repeat))]
-
-    # print (base_string)
-
-    return telomeres
+    return [base_string[i: i + length ] for i in range(len(repeat))]
 
 
 def gen_telomeres(repeat, length=21, include_reverse:bool=True):
@@ -83,10 +78,7 @@ def search_string_hash(pattern:str, telomere_hash_dict) -> bool:
 
     pattern_hash = hashlib.sha256(pattern.encode('utf-8')).hexdigest()
 
-    for i in hashes_local:
-        if pattern_hash == i:
-            return True
-    return False
+    return any(pattern_hash == i for i in hashes_local)
 
 # %%
 def search_telomeres(sRNAs:typing.List[str], repeat:str, include_reverse:bool=True) -> typing.List[bool]:
@@ -139,8 +131,7 @@ def test():
     }
 )
 def bioinfo_telomere_check(sRNAs: List[str], repeat_unit: str) -> typing.List[bool]:
-    check_result = search_telomeres(sRNAs, repeat_unit)
-    return check_result
+    return search_telomeres(sRNAs, repeat_unit)
 
 
 if __name__ == '__main__':

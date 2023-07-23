@@ -109,7 +109,7 @@ def slider(*args, **kwargs) -> (str, SliderConfig):
         for i, arg in enumerate(args[: len(arg_names)]):
             config[arg_names[i]] = arg
     elif kwargs:
-        config.update(kwargs)
+        config |= kwargs
     use_type = (
         int
         if all(

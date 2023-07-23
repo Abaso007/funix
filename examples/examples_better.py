@@ -114,16 +114,8 @@ def widget_showoff(
 ) -> Tuple[
     Markdown, str, Markdown, Audio, File, List[Video], HTML, dict, Image, Markdown, dict, Markdown, Figure, Code]:
     matplotlib_figure = plt.figure()
-    plt.plot(
-        range(1, 50),
-        [random.random() for i in range(1, 50)],
-        'r-'
-    )
-    plt.plot(
-        range(1, 50),
-        [random.random() for i in range(1, 50)],
-        'k--'
-    )
+    plt.plot(range(1, 50), [random.random() for _ in range(1, 50)], 'r-')
+    plt.plot(range(1, 50), [random.random() for _ in range(1, 50)], 'k--')
 
     sum_ = calc(op=literal_input_radio, a=X, b=Y)
     code_content = """
@@ -150,24 +142,23 @@ def hello_world(name: str) -> str:
                ],
                "version": 0.3}
 
-    return """
-## Output widgets supported by [Funix.io](http://Funix.io)
-Basic types like _int_ or _str_ are for sure. **Markdown** or `HTML` strings are automatically rendered. But it does more, including tables, video players, Matplotlib plots, and the tree views of JSON strings.
-""", \
-        f"The sum of the first two numbers in the input panels is {int_input_slider + float_input_slider}", \
-        "### Funix will add a player/downloader for multimedia and binary file returns. ", \
-        "http://curiosity.shoutca.st:8019/128", \
-        "https://github.com/TexteaInc/funix-doc/blob/main/illustrations/workflow.png?raw=true", \
-        ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
-         "https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4"], \
-        "<span style='color: blue'>JSON or dict returns can be rendered using our our sister project <a href='https://github.com/TexteaInc/json-viewer'>JSON-viewer!</a>. See the rendering results below </span>", \
-        my_dict, \
-        "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
-        "### Results from table operations can be rendered as tables or JSON. The sum of the X and Y columns in the input table is below. Be sure to check the `Sheet` radio to view the result in a single-column sheet.", \
-        sum_, \
-        """### You can also return matplotlib plots and code blocks! """, \
-        matplotlib_figure, \
-        code
+        return """
+    ## Output widgets supported by [Funix.io](http://Funix.io)
+    Basic types like _int_ or _str_ are for sure. **Markdown** or `HTML` strings are automatically rendered. But it does more, including tables, video players, Matplotlib plots, and the tree views of JSON strings.
+    """, \
+    """, \
+            f"The sum of the first two numbers in the input panels is {int_input_slider + float_input_slider}", \
+            "### Funix will add a player/downloader for multimedia and binary file returns. ", \
+            "http://curiosity.shoutca.st:8019/128", \
+            "https://github.com/TexteaInc/funix-doc/blob/main/illustrations/workflow.png?raw=true", \
+            ["http://clips.vorwaerts-gmbh.de/big_buck_bunny.mp4",
+             "https://user-images.githubusercontent.com/438579/219586150-7ff491dd-dfea-41ea-bfad-4610abf1fe20.mp4"], \
+            "<span style='color: blue'>JSON or dict returns can be rendered using our our sister project <a href='https://github.com/TexteaInc/json-viewer'>JSON-viewer!</a>. See the rendering results below </span>", \
+            my_dict, \
+            "https://opengraph.githubassets.com/1/TexteaInc/Json-viewer", \
+            "### Results from table operations can be rendered as tables or JSON. The sum of the X and Y columns in the input table is below. Be sure to check the `Sheet` radio to view the result in a single-column sheet.", \
+            sum_, \
+            """### You can also return matplotlib plots and code blocks! """, \
 
 
 randomNumber = random.randint(0, 100)
@@ -204,18 +195,16 @@ def guess(
     global randomNumber
     if cheat:
         result = f"The number is {randomNumber}. And it has been reset."
-        randomNumber = random.randint(0, 100)
-        return result
+    elif (input1 + input2) / 2 == randomNumber:
+        result = f"You won! The number was {randomNumber}. And it has been reset."
     else:
-        if (input1 + input2) / 2 == randomNumber:
-            result = f"You won! The number was {randomNumber}. And it has been reset."
-            randomNumber = random.randint(0, 100)
-            return result
-        else:
-            if (input1 + input2) / 2 > randomNumber:
-                return "Try smaller. "
-            else:
-                return "Try bigger. "
+        return (
+            "Try smaller. "
+            if (input1 + input2) / 2 > randomNumber
+            else "Try bigger. "
+        )
+    randomNumber = random.randint(0, 100)
+    return result
 
 
 # Default, choices, and example values
