@@ -40,17 +40,16 @@ def get_real_uri(path_or_file_content: str | bytes) -> str:
         else:
             return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(path_or_file_content)]}"
         return result
-    if not is_valid_uri(path_or_file_content):
-        fid = uuid4().hex + splitext(path_or_file_content)[1]
-        result = f"/file/{fid}"
-        abs_path = abspath(path_or_file_content)
-        if abs_path not in list(__files_dict.values()):
-            __files_dict[fid] = abs_path
-        else:
-            return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
-        return result
-    else:
+    if is_valid_uri(path_or_file_content):
         return path_or_file_content
+    fid = uuid4().hex + splitext(path_or_file_content)[1]
+    result = f"/file/{fid}"
+    abs_path = abspath(path_or_file_content)
+    if abs_path not in list(__files_dict.values()):
+        __files_dict[fid] = abs_path
+    else:
+        return f"/file/{list(__files_dict.keys())[list(__files_dict.values()).index(abs_path)]}"
+    return result
 
 
 def get_static_uri(path: str | list[str | bytes] | bytes) -> str | list[str]:
@@ -69,8 +68,7 @@ def get_static_uri(path: str | list[str | bytes] | bytes) -> str | list[str]:
     if isinstance(path, (str, bytes)):
         return get_real_uri(path)
     elif isinstance(path, list):
-        uris = [get_real_uri(uri) for uri in path]
-        return uris
+        return [get_real_uri(uri) for uri in path]
     else:
         raise Exception("Unsupported path type")
 

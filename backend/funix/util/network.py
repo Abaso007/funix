@@ -53,10 +53,7 @@ def is_ip_on_localhost(ip: IPv4Address | IPv6Address) -> bool:
         bool: If the ip is on this host.
     """
     is_v4 = ip.version == 4
-    if is_v4:
-        return ip in ip_network("0.0.0.0/32")
-    else:
-        return ip in ip_network("::/128")
+    return ip in ip_network("0.0.0.0/32") if is_v4 else ip in ip_network("::/128")
 
 
 def get_next_unused_port(port: int, host: str) -> int | None:
@@ -126,14 +123,13 @@ def get_unused_port_from(port: int, host: IPv4Address | IPv6Address) -> int:
     new_port = port
     new_host = get_compressed_ip_address_as_str(host)
     if is_port_used(new_port, new_host):
-        print(f"port {port} is used, try to find next or previous port.")
+        print(f"port {new_port} is used, try to find next or previous port.")
         next_port = get_next_unused_port(new_port, new_host)
-        if next_port is None:
-            previous_port = get_previous_unused_port(new_port, new_host)
-            if previous_port is None:
-                raise RuntimeError(f"No available port for {new_host}, base: {port}")
-            else:
-                return previous_port
-        else:
+        if next_port is not None:
             return next_port
+        previous_port = get_previous_unused_port(new_port, new_host)
+        if previous_port is None:
+            raise RuntimeError(f"No available port for {new_host}, base: {new_port}")
+        else:
+            return previous_port
     return new_port

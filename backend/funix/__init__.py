@@ -73,11 +73,12 @@ def __prep(
     """
     decorator.enable_wrapper()
     if module_or_file:
-        if is_module:
-            module = import_module(module_or_file)
-        else:
-            module = import_module_from_file(module_or_file, need_name)
         if lazy:
+            module = (
+                import_module(module_or_file)
+                if is_module
+                else import_module_from_file(module_or_file, need_name)
+            )
             members = reversed(dir(module))
             for member in members:
                 if isfunction(getattr(module, member)):
@@ -157,48 +158,45 @@ def import_from_config(
     if transform and (dir_mode or package_mode):
         raise ValueError("Transform mode is not supported for dir or package mode!")
 
-    if __use_git:
-        if from_git:
-            tempdir = create_safe_tempdir()
-            print("Please wait, cloning git repo...")
-            Repo.clone_from(url=from_git, to_path=tempdir)
-            new_path = tempdir
-            if repo_dir:
-                new_path = join(tempdir, repo_dir)
-            path.append(new_path)
-
-            if file_or_module_name:
-                pass
-            elif dir_mode:
-                file_or_module_name = new_path
-            elif package_mode:
-                raise ValueError(
-                    "Package mode is not supported for git mode, try to use dir mode!"
-                )
-    else:
-        if from_git:
+    if from_git:
+        if not __use_git:
             raise Exception("GitPython is not installed, please install it first!")
 
+        tempdir = create_safe_tempdir()
+        print("Please wait, cloning git repo...")
+        Repo.clone_from(url=from_git, to_path=tempdir)
+        new_path = tempdir
+        if repo_dir:
+            new_path = join(tempdir, repo_dir)
+        path.append(new_path)
+
+        if file_or_module_name:
+            pass
+        elif dir_mode:
+            file_or_module_name = new_path
+        elif package_mode:
+            raise ValueError(
+                "Package mode is not supported for git mode, try to use dir mode!"
+            )
     if app_secret and isinstance(app_secret, str):
         set_app_secret(app_secret)
 
     if dir_mode:
-        if exists(file_or_module_name) and isdir(file_or_module_name):
-            for single_file in get_python_files_in_dir(
-                base_dir=file_or_module_name, add_to_sys_path=False, need_full_path=True
-            ):
-                __prep(
-                    module_or_file=single_file,
-                    lazy=lazy,
-                    need_path=True,
-                    is_module=False,
-                    need_name=True,
-                )
-        else:
+        if not exists(file_or_module_name) or not isdir(file_or_module_name):
             raise RuntimeError(
                 "Directory not found or not a directory! "
                 "If you want to use package mode, please use --package/-P option, "
                 "if you want to use file mode, please use remove --recursive/-R option."
+            )
+        for single_file in get_python_files_in_dir(
+            base_dir=file_or_module_name, add_to_sys_path=False, need_full_path=True
+        ):
+            __prep(
+                module_or_file=single_file,
+                lazy=lazy,
+                need_path=True,
+                is_module=False,
+                need_name=True,
             )
     elif package_mode:
         module = import_module(file_or_module_name)
@@ -217,37 +215,36 @@ def import_from_config(
                 is_module=True,
                 need_name=True,
             )
+    elif not exists(file_or_module_name):
+        raise RuntimeError(
+            "File not found! If you want to use package mode, please use --package/-P option"
+        )
+    elif isdir(file_or_module_name):
+        raise RuntimeError(
+            "Oh this is a directory! If you want to use directory/recursive mode, "
+            "please use --recursive/-R option"
+        )
+    elif not file_or_module_name.endswith(".py"):
+        raise RuntimeError(
+            "This is not a Python file! You should change the file extension to `.py`."
+        )
     else:
-        if not exists(file_or_module_name):
-            raise RuntimeError(
-                "File not found! If you want to use package mode, please use --package/-P option"
-            )
-        elif isdir(file_or_module_name):
-            raise RuntimeError(
-                "Oh this is a directory! If you want to use directory/recursive mode, "
-                "please use --recursive/-R option"
-            )
-        elif not file_or_module_name.endswith(".py"):
-            raise RuntimeError(
-                "This is not a Python file! You should change the file extension to `.py`."
+        if transform:
+            __prep(
+                module_or_file=get_new_python_file(file_or_module_name),
+                lazy=lazy,
+                need_path=False,
+                is_module=False,
+                need_name=False,
             )
         else:
-            if transform:
-                __prep(
-                    module_or_file=get_new_python_file(file_or_module_name),
-                    lazy=lazy,
-                    need_path=False,
-                    is_module=False,
-                    need_name=False,
-                )
-            else:
-                __prep(
-                    module_or_file=file_or_module_name,
-                    lazy=lazy,
-                    need_path=False,
-                    is_module=False,
-                    need_name=False,
-                )
+            __prep(
+                module_or_file=file_or_module_name,
+                lazy=lazy,
+                need_path=False,
+                is_module=False,
+                need_name=False,
+            )
 
 
 def get_flask_application(
@@ -345,8 +342,7 @@ def run(
     parsed_ip = ip_address(host)
     parsed_port = get_unused_port_from(port, parsed_ip)
 
-    funix_secrets = decorator.export_secrets()
-    if funix_secrets:
+    if funix_secrets := decorator.export_secrets():
         local = get_compressed_ip_address_as_str(parsed_ip)
         print("Secrets:")
         print("-" * 15)

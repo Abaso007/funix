@@ -19,10 +19,7 @@ def import_module_from_file(path: str, need_name: bool) -> ModuleType:
     Returns:
         types.ModuleType: The module.
     """
-    if need_name:
-        name = basename(path).replace(".py", "")
-    else:
-        name = uuid4().hex
+    name = basename(path).replace(".py", "") if need_name else uuid4().hex
     spec = spec_from_file_location(name, path)
     module = module_from_spec(spec)
     spec.loader.exec_module(module)

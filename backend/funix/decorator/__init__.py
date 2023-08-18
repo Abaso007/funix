@@ -236,9 +236,10 @@ def export_secrets():
     """
     Export all secrets from the decorated functions.
     """
-    __new_dict: dict[str, str] = {}
-    for function_id, secret in __decorated_secret_functions_dict.items():
-        __new_dict[__decorated_id_to_function_dict[function_id]] = secret
+    __new_dict: dict[str, str] = {
+        __decorated_id_to_function_dict[function_id]: secret
+        for function_id, secret in __decorated_secret_functions_dict.items()
+    }
     return __new_dict
 
 
